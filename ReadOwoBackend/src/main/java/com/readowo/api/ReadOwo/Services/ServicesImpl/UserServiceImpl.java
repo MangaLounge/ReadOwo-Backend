@@ -4,6 +4,7 @@ import com.readowo.api.ReadOwo.Models.User;
 import com.readowo.api.ReadOwo.Repositories.UserRepository;
 import com.readowo.api.ReadOwo.Services.Communication.UserResponse;
 import com.readowo.api.ReadOwo.Services.IServices.IUserService;
+import com.readowo.api.ReadOwo.dtos.ResourceNotFoundException;
 import com.readowo.api.ReadOwo.dtos.SaveUserDto;
 import com.readowo.api.ReadOwo.dtos.UserDto;
 import com.readowo.api.Shared.Persistence.Repositories.UnitOfWork;
@@ -25,6 +26,7 @@ public class UserServiceImpl implements IUserService {
 
     private final BookRepository bookRepository;
     private final ModelMapper modelMapper;
+    private static final String ENTITY = "User";
 
 
 
@@ -34,8 +36,9 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public Optional<User> getUserById(Long userId) {
-        return userRepository.findById(userId);
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(()->new ResourceNotFoundException(ENTITY, userId));
     }
 
     @Override

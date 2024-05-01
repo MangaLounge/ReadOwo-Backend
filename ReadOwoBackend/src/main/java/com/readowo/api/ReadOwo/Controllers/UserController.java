@@ -2,11 +2,15 @@ package com.readowo.api.ReadOwo.Controllers;
 
 import com.readowo.api.ReadOwo.Models.User;
 import com.readowo.api.ReadOwo.Services.Communication.UserResponse;
+import com.readowo.api.ReadOwo.Services.IServices.IUserService;
 import com.readowo.api.ReadOwo.Services.ServicesImpl.UserServiceImpl;
 import com.readowo.api.ReadOwo.dtos.SaveUserDto;
 import com.readowo.api.ReadOwo.dtos.UserDto;
+import com.readowo.api.ReadOwo.mapping.UserMapper;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,23 +19,24 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("api/v1/user")
-@AllArgsConstructor
+@RequestMapping(value = "/api/v1/user", produces = "application/json")
 public class UserController {
-    private final UserServiceImpl userService;
+    private final IUserService userService;
     private final ModelMapper modelMapper;
-
-
+    private final UserMapper mapper;
+    public UserController(IUserService userService, ModelMapper modelMapper, UserMapper mapper) {
+        this.userService = userService;
+        this.mapper = mapper;
+        this.modelMapper = modelMapper;
+    }
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
-        return ResponseEntity.ok().body(users);
+    public Page<UserDto> getAllUsers(Pageable pageable) {
+        return mapper.modelListPage(userService.getAllUsers(), pageable);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<User> getOneUser(@PathVariable(value = "id") Long userId) {
-        Optional<User> user = userService.getUserById(userId);
-        return user.map(value -> ResponseEntity.ok().body(value)).orElseGet(() -> ResponseEntity.notFound().build());
+    @GetMapping("{userId}")
+    public UserDto getOneUser(@PathVariable Long userId) {
+        return mapper.toResource(userService.getUserById(userId));
     }
 
     @PostMapping
