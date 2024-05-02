@@ -1,6 +1,7 @@
 package com.readowo.api.mapping;
 
 import com.readowo.api.ReadOwo.mapping.UserMapper;
+import com.readowo.api.ReadOwo.mapping.UserProfileMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -13,5 +14,9 @@ public class MappingConfiguration{
     @Bean
     public UserMapper userMapper(){
         return new UserMapper();
+    }
+    @Bean
+    public UserProfileMapper userProfileMapperMapper(){
+        return new UserProfileMapper();
     }
 }

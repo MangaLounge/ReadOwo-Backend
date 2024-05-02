@@ -19,19 +19,17 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping(value = "/api/v1/user", produces = "application/json")
+@RequestMapping(value = "/api/v1/users", produces = "application/json")
 public class UserController {
     private final IUserService userService;
-    private final ModelMapper modelMapper;
     private final UserMapper mapper;
-    public UserController(IUserService userService, ModelMapper modelMapper, UserMapper mapper) {
+    public UserController(IUserService userService, UserMapper mapper) {
         this.userService = userService;
         this.mapper = mapper;
-        this.modelMapper = modelMapper;
     }
     @GetMapping
-    public Page<UserDto> getAllUsers(Pageable pageable) {
-        return mapper.modelListPage(userService.getAllUsers(), pageable);
+    public List<UserDto> getAllUsers() {
+        return mapper.modelList(userService.getAllUsers());
     }
 
     @GetMapping("{userId}")
@@ -41,10 +39,7 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserDto> saveUser(@RequestBody SaveUserDto saveUserDtos) {
-        User user = modelMapper.map(saveUserDtos, User.class);
-        User createdUser = userService.saveUser(saveUserDtos);
-        UserDto userDtos = modelMapper.map(createdUser, UserDto.class);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userDtos);
+        return new ResponseEntity<>(mapper.toResource(userService.saveUser(mapper.toModel(saveUserDtos))), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
