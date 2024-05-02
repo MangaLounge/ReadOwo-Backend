@@ -42,15 +42,13 @@ public class UserController {
         return new ResponseEntity<>(mapper.toResource(userService.saveUser(mapper.toModel(saveUserDtos))), HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable("id") Long id, @RequestBody SaveUserDto saveUserDtos) {
-        UserResponse response = userService.updateUser(id, saveUserDtos);
-        return ResponseEntity.ok().body(response);
+    @PutMapping("{userId}")
+    public UserDto updateUser(@PathVariable Long userId, @RequestBody SaveUserDto saveUserDtos) {
+        return mapper.toResource(userService.updateUser(userId, mapper.toModel(saveUserDtos)));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<UserResponse> deleteUser(@PathVariable(value = "id") Long userId) {
-        UserResponse response = userService.deleteUser(userId);
-        return ResponseEntity.ok().body(response);
+    @DeleteMapping("{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
+        return userService.deleteUser(userId);
     }
 }
