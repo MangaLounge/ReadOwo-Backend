@@ -1,135 +1,139 @@
 package com.readowo.api;
 
-import com.readowo.api.ReadOwo.Controllers.UserController;
 import com.readowo.api.ReadOwo.Models.User;
-import com.readowo.api.ReadOwo.Services.Communication.UserResponse;
-import com.readowo.api.ReadOwo.Services.IServices.IUserService;
+import com.readowo.api.ReadOwo.Repositories.UserRepository;
+import com.readowo.api.ReadOwo.Services.ServicesImpl.UserServiceImpl;
 import com.readowo.api.ReadOwo.dtos.SaveUserDto;
-import com.readowo.api.ReadOwo.dtos.UserDto;
-import com.readowo.api.ReadOwo.mapping.UserMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.modelmapper.ModelMapper;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 @SpringBootTest
 class ReadOwoBackendApplicationTests {
-    private IUserService userService;
-    private ModelMapper modelMapper;
-    private UserMapper userMapper;
-    private UserController userController;
+    @Mock
+    private UserRepository userRepository;
 
-    @BeforeEach
-    void setUp() {
-        userService = new IUserService() {
-            @Override
-            public List<User> getAllUsers() {
-                return null;
-            }
+    @InjectMocks
+    private UserServiceImpl userService;
 
-            @Override
-            public User getUserById(Long userId) {
-                return null;
-            }
-
-            @Override
-            public User saveUser(User user) {
-                return null;
-            }
-
-            @Override
-            public UserResponse deleteUser(Long userId) {
-                return null;
-            }
-
-            @Override
-            public UserResponse updateUser(Long id, SaveUserDto saveUserDtos) {
-                return null;
-            }
-        }; // Utilizamos una implementación falsa para IUserService
-        modelMapper = new ModelMapper();
-        userMapper = new UserMapper();
-        userController = new UserController(userService, userMapper);
-    }
     @Test
-    void testGetOneUser() {
-        // Arrange
+    void testSaveUser() {
+        SaveUserDto saveUserDto = new SaveUserDto();
+        saveUserDto.setName("Lucas");
+        saveUserDto.setEmail("lucas@gmail.com");
+        saveUserDto.setPassword("1234");
+
+        User userToSave = new User();
+        userToSave.setName(saveUserDto.getName());
+        userToSave.setEmail(saveUserDto.getEmail());
+        userToSave.setPassword(saveUserDto.getPassword());
+
+        User savedUser = new User();
+        savedUser.setId(1L);
+        savedUser.setName("Lucas");
+        savedUser.setEmail("lucas@gmail.com");
+        savedUser.setPassword("1234");
+
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+
+        User result = userService.saveUser(userToSave);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals("Lucas", result.getName());
+        assertEquals("lucas@gmail.com", result.getEmail());
+        assertEquals("1234", result.getPassword());
+
+        verify(userRepository, times(1)).save(userToSave);
+        System.out.println("Usuario creado: " + result);
+    }
+
+    @Test
+    void testGetUserById() {
         Long userId = 1L;
         User user = new User();
         user.setId(userId);
-        user.setName("Test User");
-        user.setEmail("test@example.com");
-        user.setPassword("testpassword");
+        user.setName("Lucas");
+        user.setEmail("lucas@gmail.com");
+        user.setPassword("1234");
 
-        // Act
-        UserDto actualUserDto = userController.getOneUser(userId);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-        // Assert
-        assertEquals(user.getName(), actualUserDto.getName());
-        assertEquals(user.getEmail(), actualUserDto.getEmail());
-        assertEquals(user.getPassword(), actualUserDto.getPassword());
-    }
-    @Test
-    void testSaveUser() {
-        // Arrange
-        SaveUserDto saveUserDto = new SaveUserDto();
-        saveUserDto.setName("Test User");
-        saveUserDto.setEmail("test@example.com");
-        saveUserDto.setPassword("testpassword");
+        User result = userService.getUserById(userId);
 
-        // Act
-        ResponseEntity<UserDto> responseEntity = userController.saveUser(saveUserDto);
+        assertNotNull(result);
 
-        // Assert
-        assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
+        assertEquals(userId, result.getId());
+        assertEquals("Lucas", result.getName());
+        assertEquals("lucas@gmail.com", result.getEmail());
+        assertEquals("1234", result.getPassword());
 
-        UserDto savedUserDto = responseEntity.getBody();
-        assertEquals(saveUserDto.getName(), savedUserDto.getName());
-        assertEquals(saveUserDto.getEmail(), savedUserDto.getEmail());
-        assertEquals(saveUserDto.getPassword(), savedUserDto.getPassword());
+        verify(userRepository, times(1)).findById(userId);
+        System.out.println("Usuario obtenido: " + result);
     }
 
     @Test
     void testUpdateUser() {
-        // Arrange
         Long userId = 1L;
-        SaveUserDto updateUserDto = new SaveUserDto();
-        updateUserDto.setName("Updated Test User");
-        updateUserDto.setEmail("updatedtest@example.com");
-        updateUserDto.setPassword("updatedtestpassword");
+        User existingUser = new User();
+        existingUser.setId(userId);
+        existingUser.setName("Lucas");
+        existingUser.setEmail("lucas@gmail.com");
+        existingUser.setPassword("1234");
 
-        // Act
-        ResponseEntity<UserResponse> responseEntity = userController.updateUser(userId, updateUserDto);
+        User updatedUser = new User();
+        updatedUser.setId(userId);
+        updatedUser.setName("Lucas Actualizado");
+        updatedUser.setEmail("lucas_actualizado@gmail.com");
+        updatedUser.setPassword("1234actualizado");
 
-        // Assert
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals("Updated Test User", responseEntity.getBody().getMessage());
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(updatedUser)).thenReturn(updatedUser);
+
+        User result = userService.updateUser(userId, updatedUser);
+
+        assertNotNull(result);
+        assertEquals(userId, result.getId());
+        assertEquals("Lucas Actualizado", result.getName());
+        assertEquals("lucas_actualizado@gmail.com", result.getEmail());
+        assertEquals("1234actualizado", result.getPassword());
+
+        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).save(updatedUser);
+
+        System.out.println("Resultado del test testUpdateUser: Usuario actualizado correctamente: " + result);
     }
-
     @Test
     void testDeleteUser() {
-        // Arrange
         Long userId = 1L;
+        User existingUser = new User();
+        existingUser.setId(userId);
+        existingUser.setName("Lucas");
+        existingUser.setEmail("lucas@gmail.com");
+        existingUser.setPassword("1234");
 
-        // Act
-        ResponseEntity<UserResponse> responseEntity = userController.deleteUser(userId);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        doNothing().when(userRepository).delete(existingUser);
 
-        // Assert
+        ResponseEntity<?> responseEntity = userService.deleteUser(userId);
+
+        assertNotNull(responseEntity);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals("User not found.", responseEntity.getBody().getMessage());
+
+        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).delete(existingUser);
+
+        System.out.println("Resultado del test testDeleteUser: Usuario eliminado correctamente.");
     }
 }
