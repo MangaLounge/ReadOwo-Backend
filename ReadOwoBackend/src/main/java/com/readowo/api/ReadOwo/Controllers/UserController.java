@@ -2,11 +2,15 @@ package com.readowo.api.ReadOwo.Controllers;
 
 import com.readowo.api.ReadOwo.Models.User;
 import com.readowo.api.ReadOwo.Services.Communication.UserResponse;
+import com.readowo.api.ReadOwo.Services.IServices.IUserService;
 import com.readowo.api.ReadOwo.Services.ServicesImpl.UserServiceImpl;
 import com.readowo.api.ReadOwo.dtos.SaveUserDto;
 import com.readowo.api.ReadOwo.dtos.UserDto;
+import com.readowo.api.ReadOwo.mapping.UserMapper;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,42 +19,36 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("api/v1/user")
-@AllArgsConstructor
+@RequestMapping(value = "/api/v1/users", produces = "application/json")
 public class UserController {
-    private final UserServiceImpl userService;
-    private final ModelMapper modelMapper;
-
-
+    private final IUserService userService;
+    private final UserMapper mapper;
+    public UserController(IUserService userService, UserMapper mapper) {
+        this.userService = userService;
+        this.mapper = mapper;
+    }
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
-        return ResponseEntity.ok().body(users);
+    public List<UserDto> getAllUsers() {
+        return mapper.modelList(userService.getAllUsers());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<User> getOneUser(@PathVariable(value = "id") Long userId) {
-        Optional<User> user = userService.getUserById(userId);
-        return user.map(value -> ResponseEntity.ok().body(value)).orElseGet(() -> ResponseEntity.notFound().build());
+    @GetMapping("{userId}")
+    public UserDto getOneUser(@PathVariable Long userId) {
+        return mapper.toResource(userService.getUserById(userId));
     }
 
     @PostMapping
     public ResponseEntity<UserDto> saveUser(@RequestBody SaveUserDto saveUserDtos) {
-        User user = modelMapper.map(saveUserDtos, User.class);
-        User createdUser = userService.saveUser(saveUserDtos);
-        UserDto userDtos = modelMapper.map(createdUser, UserDto.class);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userDtos);
+        return new ResponseEntity<>(mapper.toResource(userService.saveUser(mapper.toModel(saveUserDtos))), HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable("id") Long id, @RequestBody SaveUserDto saveUserDtos) {
-        UserResponse response = userService.updateUser(id, saveUserDtos);
-        return ResponseEntity.ok().body(response);
+    @PutMapping("{userId}")
+    public UserDto updateUser(@PathVariable Long userId, @RequestBody SaveUserDto saveUserDtos) {
+        return mapper.toResource(userService.updateUser(userId, mapper.toModel(saveUserDtos)));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<UserResponse> deleteUser(@PathVariable(value = "id") Long userId) {
-        UserResponse response = userService.deleteUser(userId);
-        return ResponseEntity.ok().body(response);
+    @DeleteMapping("{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
+        return userService.deleteUser(userId);
     }
 }

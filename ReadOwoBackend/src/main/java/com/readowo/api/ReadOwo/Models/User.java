@@ -5,10 +5,13 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.With;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
+@With
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,6 +26,6 @@ public class User {
     private String email;
 
     private String password;
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<UserProfile> userProfiles ;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
+    private Set<UserProfile> userProfileSet = new HashSet<>();
 }

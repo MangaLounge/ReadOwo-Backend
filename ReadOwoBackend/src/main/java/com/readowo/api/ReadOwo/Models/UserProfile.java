@@ -1,6 +1,6 @@
 package com.readowo.api.ReadOwo.Models;
 
-import com.readowo.api.publishing.Models.Book;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,5 +20,6 @@ public class UserProfile {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
 }

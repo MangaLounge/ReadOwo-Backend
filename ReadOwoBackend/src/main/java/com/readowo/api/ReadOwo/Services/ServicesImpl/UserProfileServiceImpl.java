@@ -5,6 +5,7 @@ import com.readowo.api.ReadOwo.Repositories.UserProfileRepository;
 import com.readowo.api.ReadOwo.Services.Communication.UserProfileResponse;
 import com.readowo.api.ReadOwo.Services.IServices.IUserProfileService;
 import com.readowo.api.ReadOwo.Services.IServices.IUserService;
+import com.readowo.api.ReadOwo.dtos.ResourceNotFoundException;
 import com.readowo.api.ReadOwo.dtos.SaveUserProfileDto;
 import com.readowo.api.ReadOwo.dtos.UserProfileDto;
 import com.readowo.api.Shared.Persistence.Repositories.UnitOfWork;
@@ -28,6 +29,8 @@ public class UserProfileServiceImpl implements IUserProfileService {
 
     private final BookRepository bookRepository;
     private final ModelMapper modelMapper;
+    private static final String ENTITY = "UserProfile";
+
 
 
     @Override
@@ -36,13 +39,13 @@ public class UserProfileServiceImpl implements IUserProfileService {
     }
 
     @Override
-    public Optional<UserProfile> getUserProfileById(Long userProfileId) {
-        return userProfileRepository.findById(userProfileId);
+    public UserProfile getUserProfileById(Long userProfileId) {
+        return userProfileRepository.findById(userProfileId)
+                .orElseThrow(()->new ResourceNotFoundException(ENTITY, userProfileId));
     }
 
     @Override
-    public UserProfile saveUserProfile(SaveUserProfileDto saveUserProfileDto) {
-        UserProfile userProfile = modelMapper.map(saveUserProfileDto, UserProfile.class);
+    public UserProfile saveUserProfile(UserProfile userProfile) {
         return userProfileRepository.save(userProfile);
     }
 

@@ -2,9 +2,14 @@ package com.readowo.api.ReadOwo.Controllers;
 
 import com.readowo.api.ReadOwo.Models.UserProfile;
 import com.readowo.api.ReadOwo.Services.Communication.UserProfileResponse;
+import com.readowo.api.ReadOwo.Services.IServices.IUserProfileService;
+import com.readowo.api.ReadOwo.Services.IServices.IUserService;
 import com.readowo.api.ReadOwo.Services.ServicesImpl.UserProfileServiceImpl;
 import com.readowo.api.ReadOwo.dtos.SaveUserProfileDto;
+import com.readowo.api.ReadOwo.dtos.UserDto;
 import com.readowo.api.ReadOwo.dtos.UserProfileDto;
+import com.readowo.api.ReadOwo.mapping.UserMapper;
+import com.readowo.api.ReadOwo.mapping.UserProfileMapper;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -15,31 +20,29 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("api/v1/userProfile")
-@AllArgsConstructor
+@RequestMapping(value = "api/v1/userProfile", produces = "application/json")
 public class UserProfileController {
-    private final UserProfileServiceImpl userProfileService;
-    private final ModelMapper modelMapper;
+    private final IUserProfileService userProfileService;
+    private final UserProfileMapper mapper;
 
-
-    @GetMapping
-    public ResponseEntity<List<UserProfile>> getAllUserProfiles() {
-        List<UserProfile> userProfiles = userProfileService.getAllUserProfiles();
-        return ResponseEntity.ok().body(userProfiles);
+    public UserProfileController(IUserProfileService userProfileService, UserProfileMapper mapper) {
+        this.userProfileService = userProfileService;
+        this.mapper = mapper;
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UserProfile> getOneUserProfile(@PathVariable(value = "id") Long userProfileId) {
-        Optional<UserProfile> userProfile = userProfileService.getUserProfileById(userProfileId);
-        return userProfile.map(value -> ResponseEntity.ok().body(value)).orElseGet(() -> ResponseEntity.notFound().build());
+    @GetMapping
+    public List<UserProfileDto> getAllUserProfiles() {
+        return mapper.modelList(userProfileService.getAllUserProfiles());
+    }
+
+    @GetMapping("{userId}")
+    public UserProfileDto getOneUserProfile(@PathVariable Long userId) {
+        return mapper.toResource(userProfileService.getUserProfileById(userId));
     }
 
     @PostMapping
-    public ResponseEntity<UserProfileDto> saveUserProfile(@RequestBody SaveUserProfileDto saveUserProfileDto) {
-        UserProfile userProfile = modelMapper.map(saveUserProfileDto, UserProfile.class);
-        UserProfile createdUserProfile = userProfileService.saveUserProfile(saveUserProfileDto);
-        UserProfileDto userProfileDto = modelMapper.map(createdUserProfile, UserProfileDto.class);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userProfileDto);
+    public UserProfileDto saveUserProfile(@RequestBody SaveUserProfileDto saveUserProfileDto) {
+        return mapper.toResource(userProfileService.saveUserProfile(mapper.toModel(saveUserProfileDto)));
     }
 
     @PutMapping("/{id}")
