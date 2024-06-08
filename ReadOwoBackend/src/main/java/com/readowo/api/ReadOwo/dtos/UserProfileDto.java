@@ -10,12 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserProfileDto {
-
-
     private Long Id ;
-
     private String Name;
-
-
     private User user;
 }

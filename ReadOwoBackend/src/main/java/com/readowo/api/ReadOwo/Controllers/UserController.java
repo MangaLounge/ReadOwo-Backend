@@ -1,22 +1,14 @@
 package com.readowo.api.ReadOwo.Controllers;
 
-import com.readowo.api.ReadOwo.Models.User;
-import com.readowo.api.ReadOwo.Services.Communication.UserResponse;
 import com.readowo.api.ReadOwo.Services.IServices.IUserService;
-import com.readowo.api.ReadOwo.Services.ServicesImpl.UserServiceImpl;
 import com.readowo.api.ReadOwo.dtos.SaveUserDto;
 import com.readowo.api.ReadOwo.dtos.UserDto;
 import com.readowo.api.ReadOwo.mapping.UserMapper;
-import lombok.AllArgsConstructor;
-import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping(value = "/api/v1/users", produces = "application/json")

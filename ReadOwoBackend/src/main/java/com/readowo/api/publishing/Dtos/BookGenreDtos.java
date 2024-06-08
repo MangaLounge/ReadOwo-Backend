@@ -16,7 +16,7 @@ public class BookGenreDtos {
 
     private Long Id ;
 
-    private BookDtos book ;
+    private Book book ;
 
-    private GenreDtos genre ;
+    private Genre genre ;
 }

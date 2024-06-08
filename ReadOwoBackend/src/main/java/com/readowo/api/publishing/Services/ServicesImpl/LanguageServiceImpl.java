@@ -1,12 +1,14 @@
 package com.readowo.api.publishing.Services.ServicesImpl;
 
 import com.readowo.api.ReadOwo.Repositories.IUnitOfWork;
+import com.readowo.api.ReadOwo.dtos.ResourceNotFoundException;
 import com.readowo.api.publishing.Dtos.GenreDtos;
 import com.readowo.api.publishing.Dtos.LanguageDtos;
 import com.readowo.api.publishing.Dtos.SaveGenreDtos;
 import com.readowo.api.publishing.Dtos.SaveLanguageDtos;
 import com.readowo.api.publishing.Models.Genre;
 import com.readowo.api.publishing.Models.Language;
+import com.readowo.api.publishing.Models.Saga;
 import com.readowo.api.publishing.Repositories.LanguageRepository;
 import com.readowo.api.publishing.Services.Communication.GenreResponse;
 import com.readowo.api.publishing.Services.Communication.LanguageResponse;
@@ -14,6 +16,7 @@ import com.readowo.api.publishing.Services.IServices.ILanguageService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.modelmapper.ModelMapper;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,51 +29,38 @@ public class LanguageServiceImpl implements ILanguageService {
 
     private final LanguageRepository languageRepository;
     private final IUnitOfWork unitOfWork;
-    private final ModelMapper modelMapper;
+    private static final String ENTITY = "Language";
     @Override
     public List<Language> listLanguages() {
         return languageRepository.findAll();
     }
 
     @Override
-    public Optional<Language> findLanguageById(Long languageId) {
-        return languageRepository.findById(languageId);
+    public Language findLanguageById(Long languageId) {
+        return languageRepository.findById(languageId)
+                .orElseThrow(()->new ResourceNotFoundException(ENTITY, languageId));
     }
 
     @Override
-    public Language saveLanguage(SaveLanguageDtos saveLanguageDtos) {
-        Language language = modelMapper.map(saveLanguageDtos, Language.class);
+    public Language saveLanguage(Language language) {
         return languageRepository.save(language);
     }
 
 
     @Override
-    public LanguageResponse updateLanguage(Long id, SaveLanguageDtos saveLanguageDtos) {
-        Optional<Language> optionalLanguage = languageRepository.findById(id);
-        if (optionalLanguage.isPresent()) {
-            Language existingLanguage = optionalLanguage.get();
-            modelMapper.map(saveLanguageDtos, existingLanguage);
-            Language updatedCha = languageRepository.save(existingLanguage);
-            LanguageDtos languageDtos = modelMapper.map(updatedCha, LanguageDtos.class);
-            return new LanguageResponse(String.valueOf(languageDtos));
-        } else {
-            return new LanguageResponse("Book not found");
-        }
+    public Language updateLanguage(Long id, Language language) {
+        return languageRepository.findById(id).map(languageToUpdate ->
+                        languageRepository.save(
+                                languageToUpdate.withAbbreviation(language.getAbbreviation())
+                                        .withName(language.getName())))
+                .orElseThrow(() -> new ResourceNotFoundException(ENTITY, id));
     }
 
     @Override
-    public LanguageResponse deleteLanguage(Long languageId) {
-        Optional<Language> existingLanguage = languageRepository.findById(languageId);
-        if (existingLanguage.isPresent()) {
-            try {
-                languageRepository.delete(existingLanguage.get());
-                unitOfWork.complete();
-                return new LanguageResponse(existingLanguage.get());
-            } catch (Exception e) {
-                return new LanguageResponse("An error occurred while deleting the language: " + e.getMessage());
-            }
-        } else {
-            return new LanguageResponse("Language not found.");
-        }
+    public ResponseEntity<?> deleteLanguage(Long languageId) {
+        return languageRepository.findById(languageId).map(language -> {
+                    languageRepository.delete(language);
+                    return ResponseEntity.ok().build();})
+                .orElseThrow(() -> new ResourceNotFoundException(ENTITY, languageId));
     }
 }

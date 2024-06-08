@@ -7,6 +7,4 @@ public class SaveSagaDtos {
 
     private String Title;
     private String Synopsis;
-
-    private Long SagaStatusId;
 }

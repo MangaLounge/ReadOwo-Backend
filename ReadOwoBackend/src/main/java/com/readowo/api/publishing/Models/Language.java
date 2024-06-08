@@ -4,11 +4,15 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.With;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
+@With
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -21,9 +25,4 @@ public class Language {
 
     private String Name;
     private String Abbreviation;
-
-    @OneToMany(mappedBy = "language", cascade = CascadeType.ALL)
-    private List<Book> books ;
-
-
 }

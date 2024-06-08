@@ -5,6 +5,7 @@ import com.readowo.api.publishing.Dtos.SaveBookGenreDtos;
 import com.readowo.api.publishing.Dtos.SaveGenreDtos;
 import com.readowo.api.publishing.Models.BookGenre;
 import com.readowo.api.publishing.Services.Communication.BookGenreResponse;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,9 +13,8 @@ import java.util.Optional;
 public interface IBookGenreService {
 
     List<BookGenre> list();
-    Optional<BookGenre> findById(Long id);
-
-    BookGenre saveBookGenre(SaveGenreDtos saveBookGenreDtos);
-    BookGenreResponse updateBookGenre(Long id, SaveBookGenreDtos saveBookGenreDtos);
-    BookGenreResponse delete(Long bookGenreId);
+    BookGenre findById(Long id);
+    BookGenre saveBookGenre(BookGenre bookGenre);
+    BookGenre updateBookGenre(Long id, BookGenre bookGenre);
+    ResponseEntity<?> delete(Long bookGenreId);
 }

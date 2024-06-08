@@ -26,7 +26,6 @@ public class UserServiceImpl implements IUserService {
     private final UnitOfWork unitOfWork;
 
     private final BookRepository bookRepository;
-    private final ModelMapper modelMapper;
     private static final String ENTITY = "User";
 
 

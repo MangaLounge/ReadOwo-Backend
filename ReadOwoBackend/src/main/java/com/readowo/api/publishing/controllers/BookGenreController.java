@@ -3,10 +3,10 @@ package com.readowo.api.publishing.controllers;
 
 import com.readowo.api.publishing.Dtos.*;
 import com.readowo.api.publishing.Models.BookGenre;
-import com.readowo.api.publishing.Models.BookStatus;
 import com.readowo.api.publishing.Services.Communication.BookGenreResponse;
-import com.readowo.api.publishing.Services.Communication.BookStatusResponse;
+import com.readowo.api.publishing.Services.IServices.IBookGenreService;
 import com.readowo.api.publishing.Services.ServicesImpl.BookGenreServiceImpl;
+import com.readowo.api.publishing.mapping.BookGenreMapper;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,54 +16,39 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("api/v1/book-Genres")
+@RequestMapping(value = "/api/v1/bookgenre", produces = "application/json")
 public class BookGenreController {
 
-    private final ModelMapper modelMapper;
-    private final BookGenreServiceImpl bookGenreService;
+    private final BookGenreMapper mapper;
+    private final IBookGenreService bookGenreService;
 
-    public BookGenreController(BookGenreServiceImpl bookGenreService , ModelMapper modelMapper) {
+    public BookGenreController(BookGenreServiceImpl bookGenreService , BookGenreMapper mapper) {
         this.bookGenreService = bookGenreService;
-        this.modelMapper=modelMapper;
+        this.mapper=mapper;
     }
 
     @GetMapping
-    public ResponseEntity<List<BookGenre>> listBookGenres() {
-        List<BookGenre> bookGenres = bookGenreService.list();
-        return new ResponseEntity<>(bookGenres, HttpStatus.OK);
+    public List<BookGenreDtos> getAllBookGenres() {
+        return mapper.modelList(bookGenreService.list());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<BookGenre> findBookGenreById(@PathVariable Long id) {
-        Optional<BookGenre> bookGenre = bookGenreService.findById(id);
-        return bookGenre.map(value -> new ResponseEntity<>(value, HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    @GetMapping("{bookgenreId}")
+    public BookGenreDtos getOneBookGenre(@PathVariable Long bookgenreId) {
+        return mapper.toResource(bookGenreService.findById(bookgenreId));
     }
 
     @PostMapping
-    public ResponseEntity<BookGenreDtos> saveBookGenre(@RequestBody SaveGenreDtos saveGenreDtos) {
-        BookGenre bookGenre = modelMapper.map(saveGenreDtos,BookGenre.class);
-        BookGenre createBookGenre = bookGenreService.saveBookGenre(saveGenreDtos);
-        BookGenreDtos bookGenreDtos= modelMapper.map(createBookGenre, BookGenreDtos.class);
-        return ResponseEntity.status(HttpStatus.CREATED).body(bookGenreDtos);
-
+    public ResponseEntity<BookGenreDtos> saveBookGenre(@RequestBody SaveBookGenreDtos saveBookGenreDtos) {
+        return new ResponseEntity<>(mapper.toResource(bookGenreService.saveBookGenre(mapper.toModel(saveBookGenreDtos))), HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<BookGenreResponse> updateBookGenre(@PathVariable("id") Long id, @RequestBody SaveBookGenreDtos saveBookGenreDtos) {
-        BookGenreResponse response = bookGenreService.updateBookGenre(id, saveBookGenreDtos);
-        return ResponseEntity.ok().body(response);
+    @PutMapping("{bookgenreId}")
+    public BookGenreDtos updateBookGenre(@PathVariable Long bookgenreId, @RequestBody SaveBookGenreDtos saveBookGenreDtos) {
+        return mapper.toResource(bookGenreService.updateBookGenre(bookgenreId, mapper.toModel(saveBookGenreDtos)));
     }
-
-
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<BookGenreResponse> deleteBookGenre(@PathVariable Long id) {
-        BookGenreResponse response = bookGenreService.delete(id);
-        if (response.isSuccess()) {
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-        }
+    @DeleteMapping("{bookgenreId}")
+    public ResponseEntity<?> deleteBookGenre(@PathVariable Long bookgenreId) {
+        return bookGenreService.delete(bookgenreId);
     }
 }
 

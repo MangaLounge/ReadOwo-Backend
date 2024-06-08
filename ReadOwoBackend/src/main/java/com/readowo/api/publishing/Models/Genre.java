@@ -4,10 +4,14 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.With;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
+@With
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,9 +24,6 @@ public class Genre {
 
     private String Name;
 
-    @OneToMany(mappedBy = "genre", cascade = CascadeType.ALL)
-    private List<BookGenre> bookGenres ;
-
-
-
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "genre")
+    private Set<BookGenre> bookGenres = new HashSet<>() ;
 }

@@ -27,5 +27,5 @@ public class User {
 
     private String password;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
-    private Set<UserProfile> userProfileSet = new HashSet<>();
+    private Set<UserProfile> userProfiles = new HashSet<>();
 }

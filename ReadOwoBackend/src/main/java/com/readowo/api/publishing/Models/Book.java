@@ -1,16 +1,22 @@
 package com.readowo.api.publishing.Models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.readowo.api.ReadOwo.Models.UserProfile;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.With;
 
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 @Entity
 @Data
+@With
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "book")
@@ -22,31 +28,18 @@ public class Book {
     private String Synopsis ;
     private String PublishedAt ;
     private String ThumbnailUrl ;
-    private Long ProfileId;
 
     @ManyToOne
-    @JoinColumn(name = "language_id", nullable = false)
+    @JoinColumn(name = "user_profile_id", nullable = false)
     @JsonIgnore
-    private Language language;
+    private UserProfile userProfile;
 
-    @ManyToOne
-    @JoinColumn(name = "saga_id", nullable = false)
-    @JsonIgnore
-    private Saga saga;
+    private String language;
+    private String saga;
 
-    @ManyToOne
-    @JoinColumn(name = "bookStatus_id", nullable = false)
-    @JsonIgnore
-    private BookStatus bookStatus;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "book")
+    private Set<Chapters> chapters = new HashSet<>() ;
 
-
-
-    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
-    private List<Chapters> chapters ;
-
-    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
-    private List<BookGenre> bookGenres ;
-
-
-
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "book")
+    private Set<BookGenre> bookGenres = new HashSet<>() ;
 }

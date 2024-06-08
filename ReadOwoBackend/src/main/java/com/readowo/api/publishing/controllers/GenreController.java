@@ -1,15 +1,16 @@
 package com.readowo.api.publishing.controllers;
 
 
-import com.readowo.api.publishing.Dtos.ChapterDtos;
-import com.readowo.api.publishing.Dtos.GenreDtos;
-import com.readowo.api.publishing.Dtos.SaveChapterDtos;
-import com.readowo.api.publishing.Dtos.SaveGenreDtos;
+import com.readowo.api.publishing.Dtos.*;
 import com.readowo.api.publishing.Models.Chapters;
 import com.readowo.api.publishing.Models.Genre;
 import com.readowo.api.publishing.Services.Communication.ChapterResponse;
 import com.readowo.api.publishing.Services.Communication.GenreResponse;
+import com.readowo.api.publishing.Services.IServices.IGenreService;
+import com.readowo.api.publishing.Services.IServices.ISagaService;
 import com.readowo.api.publishing.Services.ServicesImpl.GenreServiceImpl;
+import com.readowo.api.publishing.mapping.GenreMapper;
+import com.readowo.api.publishing.mapping.SagaMapper;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,43 +22,37 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("api/v1/genres")
-@AllArgsConstructor
+@RequestMapping(value = "/api/v1/genre", produces = "application/json")
 public class GenreController {
-    private final GenreServiceImpl genreService;
-    private final ModelMapper modelMapper;
+    private final IGenreService genreService;
+    private final GenreMapper mapper;
 
-
+    public GenreController(IGenreService genreService, GenreMapper mapper) {
+        this.genreService = genreService;
+        this.mapper = mapper;
+    }
     @GetMapping
-    public ResponseEntity<List<Genre>> getAllGenres() {
-        List<Genre> genres = genreService.listGenres();
-        return ResponseEntity.ok().body(genres);
+    public List<GenreDtos> getAllGenres() {
+        return mapper.modelList(genreService.listGenres());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Genre> getGenreById(@PathVariable("id") Long genreId) {
-        Optional<Genre> genre = genreService.findGenreById(genreId);
-        return genre.map(value -> ResponseEntity.ok().body(value))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+
+    @GetMapping("{genreId}")
+    public GenreDtos getOneGenre(@PathVariable Long genreId) {
+        return mapper.toResource(genreService.findGenreById(genreId));
     }
 
     @PostMapping
     public ResponseEntity<GenreDtos> saveGenre(@RequestBody SaveGenreDtos saveGenreDtos) {
-        Genre genre = modelMapper.map(saveGenreDtos, Genre.class);
-        Genre createdGenre = genreService.saveGenre(saveGenreDtos);
-        GenreDtos genreDtos = modelMapper.map(createdGenre, GenreDtos.class);
-        return ResponseEntity.status(HttpStatus.CREATED).body(genreDtos);
+        return new ResponseEntity<>(mapper.toResource(genreService.saveGenre(mapper.toModel(saveGenreDtos))), HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<GenreResponse> updateGenre(@PathVariable("id") Long id, @RequestBody SaveGenreDtos saveGenreDtos) {
-        GenreResponse response = genreService.updateGenre(id, saveGenreDtos);
-        return ResponseEntity.ok().body(response);
+    @PutMapping("{genreId}")
+    public GenreDtos updateGenre(@PathVariable Long genreId, @RequestBody SaveGenreDtos saveGenreDtos) {
+        return mapper.toResource(genreService.updateGenre(genreId, mapper.toModel(saveGenreDtos)));
     }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<GenreResponse> deleteGenre(@PathVariable("id") Long genreId) {
-        GenreResponse response = genreService.deleteGenre(genreId);
-        return ResponseEntity.ok().body(response);
+    @DeleteMapping("{genreId}")
+    public ResponseEntity<?> deleteGenre(@PathVariable Long genreId) {
+        return genreService.deleteGenre(genreId);
     }
 }

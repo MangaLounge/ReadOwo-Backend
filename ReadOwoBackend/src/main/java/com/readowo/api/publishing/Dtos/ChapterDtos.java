@@ -1,6 +1,7 @@
 package com.readowo.api.publishing.Dtos;
 
 
+import com.readowo.api.publishing.Models.Book;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,7 +14,7 @@ public class ChapterDtos {
     private Long Id ;
 
     private String Title;
-    private String Document_content_url;
+    private String Synopsis;
 
-    private BookDtos book;
+    private Book book;
 }

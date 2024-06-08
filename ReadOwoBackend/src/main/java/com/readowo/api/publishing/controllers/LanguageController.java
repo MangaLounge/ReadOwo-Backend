@@ -1,14 +1,15 @@
 package com.readowo.api.publishing.controllers;
 
-import com.readowo.api.publishing.Dtos.GenreDtos;
-import com.readowo.api.publishing.Dtos.LanguageDtos;
-import com.readowo.api.publishing.Dtos.SaveGenreDtos;
-import com.readowo.api.publishing.Dtos.SaveLanguageDtos;
+import com.readowo.api.publishing.Dtos.*;
 import com.readowo.api.publishing.Models.Genre;
 import com.readowo.api.publishing.Models.Language;
 import com.readowo.api.publishing.Services.Communication.GenreResponse;
 import com.readowo.api.publishing.Services.Communication.LanguageResponse;
+import com.readowo.api.publishing.Services.IServices.ILanguageService;
+import com.readowo.api.publishing.Services.IServices.ISagaService;
 import com.readowo.api.publishing.Services.ServicesImpl.LanguageServiceImpl;
+import com.readowo.api.publishing.mapping.LanguageMapper;
+import com.readowo.api.publishing.mapping.SagaMapper;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -19,44 +20,35 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("api/v1/languages")
-@AllArgsConstructor
+@RequestMapping(value = "/api/v1/language", produces = "application/json")
 public class LanguageController {
-    private final LanguageServiceImpl languageService;
-    private final ModelMapper modelMapper;
+    private final ILanguageService languageService;
+    private final LanguageMapper mapper;
 
-
+    public LanguageController(ILanguageService languageService, LanguageMapper mapper) {
+        this.languageService = languageService;
+        this.mapper = mapper;
+    }
 
     @GetMapping
-    public ResponseEntity<List<Language>> getAllLanguages() {
-        List<Language> languages = languageService.listLanguages();
-        return ResponseEntity.ok().body(languages);
+    public List<LanguageDtos> getAllLanguages() {
+        return mapper.modelList(languageService.listLanguages());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Language> getLanguageById(@PathVariable("id") Long languageId) {
-        Optional<Language> language = languageService.findLanguageById(languageId);
-        return language.map(value -> ResponseEntity.ok().body(value))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    @GetMapping("{languageId}")
+    public LanguageDtos getLanguageById(@PathVariable Long languageId) {
+        return mapper.toResource(languageService.findLanguageById(languageId));
     }
-
     @PostMapping
     public ResponseEntity<LanguageDtos> saveLanguage(@RequestBody SaveLanguageDtos saveLanguageDtos) {
-        Language language = modelMapper.map(saveLanguageDtos, Language.class);
-        Language createdLanguage = languageService.saveLanguage(saveLanguageDtos);
-        LanguageDtos languageDtos = modelMapper.map(createdLanguage, LanguageDtos.class);
-        return ResponseEntity.status(HttpStatus.CREATED).body(languageDtos);
+        return new ResponseEntity<>(mapper.toResource(languageService.saveLanguage(mapper.toModel(saveLanguageDtos))), HttpStatus.CREATED);
     }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<LanguageResponse> updateLanguage(@PathVariable("id") Long id, @RequestBody SaveLanguageDtos saveLanguageDtos) {
-        LanguageResponse response = languageService.updateLanguage(id, saveLanguageDtos);
-        return ResponseEntity.ok().body(response);
+    @PutMapping("{languageId}")
+    public LanguageDtos updateLanguage(@PathVariable Long languageId, @RequestBody SaveLanguageDtos saveLanguageDtos) {
+        return mapper.toResource(languageService.updateLanguage(languageId, mapper.toModel(saveLanguageDtos)));
     }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<LanguageResponse> deleteLanguage(@PathVariable("id") Long languageId) {
-        LanguageResponse response = languageService.deleteLanguage(languageId);
-        return ResponseEntity.ok().body(response);
+    @DeleteMapping("{languageId}")
+    public ResponseEntity<?> deleteLanguage(@PathVariable Long languageId) {
+        return languageService.deleteLanguage(languageId);
     }
 }
