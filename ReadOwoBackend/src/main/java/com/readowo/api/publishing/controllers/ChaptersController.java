@@ -3,10 +3,16 @@ package com.readowo.api.publishing.controllers;
 
 
 import com.readowo.api.publishing.Dtos.ChapterDtos;
+import com.readowo.api.publishing.Dtos.SagaDtos;
 import com.readowo.api.publishing.Dtos.SaveChapterDtos;
+import com.readowo.api.publishing.Dtos.SaveSagaDtos;
 import com.readowo.api.publishing.Models.Chapters;
 import com.readowo.api.publishing.Services.Communication.ChapterResponse;
+import com.readowo.api.publishing.Services.IServices.IChaptersService;
+import com.readowo.api.publishing.Services.IServices.ISagaService;
 import com.readowo.api.publishing.Services.ServicesImpl.ChaptersServiceImpl;
+import com.readowo.api.publishing.mapping.ChaptersMapper;
+import com.readowo.api.publishing.mapping.SagaMapper;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,50 +23,35 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("api/v1/chapters")
+@RequestMapping(value = "/api/v1/chapters", produces = "application/json")
 public class ChaptersController {
-
-
-    private final ChaptersServiceImpl chaptersService;
-    private final ModelMapper modelMapper;
-
-    @Autowired
-    public ChaptersController(ChaptersServiceImpl chaptersService, ModelMapper modelMapper) {
+    private final IChaptersService chaptersService;
+    private final ChaptersMapper mapper;
+    public ChaptersController(IChaptersService chaptersService, ChaptersMapper mapper) {
         this.chaptersService = chaptersService;
-        this.modelMapper = modelMapper;
+        this.mapper = mapper;
     }
 
     @GetMapping
-    public ResponseEntity<List<Chapters>> getAllChapters() {
-        List<Chapters> chaptersList = chaptersService.getAllChapters();
-        return ResponseEntity.ok().body(chaptersList);
+    public List<ChapterDtos> getAllChapters() {
+        return mapper.modelList(chaptersService.getAllChapters());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getChaptersById(@PathVariable Long id) {
-        Optional<Chapters> chapters = chaptersService.getChaptersById(id);
-        return chapters.map(value -> new ResponseEntity<>(value, HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    @GetMapping("{chaptersId}")
+    public ChapterDtos getOneChapter(@PathVariable Long chaptersId) {
+        return mapper.toResource(chaptersService.getChaptersById(chaptersId));
     }
-
-
-
     @PostMapping
     public ResponseEntity<ChapterDtos> saveChapters(@RequestBody SaveChapterDtos saveChapterDtos) {
-        Chapters chapters = modelMapper.map(saveChapterDtos, Chapters.class);
-        Chapters createdChapters = chaptersService.saveChapters(saveChapterDtos);
-        ChapterDtos chapterDtos = modelMapper.map(createdChapters, ChapterDtos.class);
-        return ResponseEntity.status(HttpStatus.CREATED).body(chapterDtos);
+        return new ResponseEntity<>(mapper.toResource(chaptersService.saveChapters(mapper.toModel(saveChapterDtos))), HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ChapterResponse> updateChapters(@PathVariable("id") Long id, @RequestBody SaveChapterDtos saveChapterDtos) {
-        ChapterResponse response = chaptersService.updateChapters(id, saveChapterDtos);
-        return ResponseEntity.ok().body(response);
+    @PutMapping("{chaptersId}")
+    public ChapterDtos updateChapters(@PathVariable Long chaptersId, @RequestBody SaveChapterDtos saveChapterDtos) {
+        return mapper.toResource(chaptersService.updateChapters(chaptersId, mapper.toModel(saveChapterDtos)));
     }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ChapterResponse> deleteChapters(@PathVariable("id") Long chapterId) {
-        ChapterResponse response = chaptersService.deleteChapters(chapterId);
-        return ResponseEntity.ok().body(response);
+    @DeleteMapping("{chaptersId}")
+    public ResponseEntity<?> deleteChapters(@PathVariable Long chaptersId) {
+        return chaptersService.deleteChapters(chaptersId);
     }
 }

@@ -1,10 +1,16 @@
 package com.readowo.api.publishing.controllers;
 
+import com.readowo.api.ReadOwo.Services.IServices.IUserService;
+import com.readowo.api.ReadOwo.dtos.SaveUserDto;
+import com.readowo.api.ReadOwo.dtos.UserDto;
+import com.readowo.api.ReadOwo.mapping.UserMapper;
 import com.readowo.api.publishing.Dtos.SagaDtos;
 import com.readowo.api.publishing.Dtos.SaveSagaDtos;
 import com.readowo.api.publishing.Models.Saga;
 import com.readowo.api.publishing.Services.Communication.SagaResponse;
+import com.readowo.api.publishing.Services.IServices.ISagaService;
 import com.readowo.api.publishing.Services.ServicesImpl.SagaServiceImpl;
+import com.readowo.api.publishing.mapping.SagaMapper;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,43 +22,36 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("api/v1/saga")
-@AllArgsConstructor
+@RequestMapping(value = "/api/v1/saga", produces = "application/json")
 public class SagaController {
-    private final SagaServiceImpl sagaService;
-    private final ModelMapper modelMapper;
+    private final ISagaService sagaService;
+    private final SagaMapper mapper;
 
-
+    public SagaController(ISagaService sagaService, SagaMapper mapper) {
+        this.sagaService = sagaService;
+        this.mapper = mapper;
+    }
     @GetMapping
-    public ResponseEntity<List<Saga>> getAllSagas() {
-        List<Saga> sagas = sagaService.listSagas();
-        return ResponseEntity.ok().body(sagas);
+    public List<SagaDtos> getAllSagas() {
+        return mapper.modelList(sagaService.listSagas());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Saga> getOneSaga(@PathVariable(value = "id") Long sagaId) {
-        Optional<Saga> saga = sagaService.findSagaById(sagaId);
-        return saga.map(value -> ResponseEntity.ok().body(value)).orElseGet(() -> ResponseEntity.notFound().build());
+    @GetMapping("{sagaId}")
+    public SagaDtos getOneSaga(@PathVariable Long sagaId) {
+        return mapper.toResource(sagaService.findSagaById(sagaId));
     }
 
     @PostMapping
     public ResponseEntity<SagaDtos> saveSaga(@RequestBody SaveSagaDtos saveSagaDtos) {
-        Saga saga = modelMapper.map(saveSagaDtos, Saga.class);
-        Saga createdSaga = sagaService.saveSaga(saveSagaDtos);
-        SagaDtos sagaDtos = modelMapper.map(createdSaga, SagaDtos.class);
-        return ResponseEntity.status(HttpStatus.CREATED).body(sagaDtos);
+        return new ResponseEntity<>(mapper.toResource(sagaService.saveSaga(mapper.toModel(saveSagaDtos))), HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<SagaResponse> updateSaga(@PathVariable("id") Long id, @RequestBody SaveSagaDtos saveSagaDtos) {
-        SagaResponse response = sagaService.updateSaga(id, saveSagaDtos);
-        return ResponseEntity.ok().body(response);
+    @PutMapping("{sagaId}")
+    public SagaDtos updateSaga(@PathVariable Long sagaId, @RequestBody SaveSagaDtos saveSagaDtos) {
+        return mapper.toResource(sagaService.updateSaga(sagaId, mapper.toModel(saveSagaDtos)));
     }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<SagaResponse> deleteSaga(@PathVariable(value = "id") Long sagaId) {
-        SagaResponse response = sagaService.deleteSaga(sagaId);
-        return ResponseEntity.ok().body(response);
+    @DeleteMapping("{sagaId}")
+    public ResponseEntity<?> deleteSaga(@PathVariable Long sagaId) {
+        return sagaService.deleteSaga(sagaId);
     }
-
 }

@@ -5,11 +5,13 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.With;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
+@With
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,14 +24,4 @@ public class Saga {
 
     private String Title;
     private String Synopsis;
-    @ManyToOne
-    @JoinColumn(name = "sagaStatus_id", nullable = false)
-    @JsonIgnore
-    private SagaStatus sagaStatus;
-
-
-    @OneToMany(mappedBy = "saga", cascade = CascadeType.ALL)
-    private List<Book> books ;
-
-
 }

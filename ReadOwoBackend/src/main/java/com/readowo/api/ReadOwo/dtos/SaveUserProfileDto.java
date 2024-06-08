@@ -10,8 +10,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SaveUserProfileDto {
     private String Name;
-
-
     private Long userId;
-
 }

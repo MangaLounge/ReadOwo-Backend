@@ -1,13 +1,12 @@
 package com.readowo.api.publishing.controllers;
 
-import com.readowo.api.publishing.Dtos.BookDtos;
-import com.readowo.api.publishing.Dtos.ChapterDtos;
-import com.readowo.api.publishing.Dtos.SaveBookDtos;
-import com.readowo.api.publishing.Dtos.SaveChapterDtos;
+import com.readowo.api.publishing.Dtos.*;
 import com.readowo.api.publishing.Models.Book;
 import com.readowo.api.publishing.Models.Chapters;
 import com.readowo.api.publishing.Services.Communication.BookResponse;
+import com.readowo.api.publishing.Services.IServices.IBookService;
 import com.readowo.api.publishing.Services.ServicesImpl.BookServiceImpl;
+import com.readowo.api.publishing.mapping.BookMapper;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,64 +19,35 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("api/v1/books")
-
+@RequestMapping(value = "/api/v1/books", produces = "application/json")
 public class BookController {
-    private final BookServiceImpl bookService;
-
-    private final ModelMapper modelMapper;
-
+    private final IBookService bookService;
+    private final BookMapper mapper;
     @Autowired
-    public BookController(BookServiceImpl bookService, ModelMapper modelMapper) {
+    public BookController(IBookService bookService, BookMapper mapper) {
         this.bookService = bookService;
-        this.modelMapper = modelMapper;
+        this.mapper = mapper;
     }
 
     @GetMapping
-    public ResponseEntity<List<BookDtos>> getAllBooks() {
-        List<Book> books = bookService.getAllBooks();
-        List<BookDtos> bookDtos = books.stream()
-                .map(book -> modelMapper.map(book, BookDtos.class))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(bookDtos);
+    public List<BookDtos> getAllBooks() {
+        return mapper.modelList(bookService.getAllBooks());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<BookDtos> getBookById(@PathVariable Long id) {
-        Optional<Book> book = bookService.getBookById(id);
-        if (book != null) {
-            BookDtos bookDtos = modelMapper.map(book, BookDtos.class);
-            return ResponseEntity.ok(bookDtos);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    @GetMapping("{bookId}")
+    public BookDtos getOneBook(@PathVariable Long bookId) {
+        return mapper.toResource(bookService.getBookById(bookId));
     }
-
     @PostMapping
-    public ResponseEntity<BookDtos> createBook(@RequestBody SaveBookDtos saveBookDtos) {
-        Book book = modelMapper.map(saveBookDtos, Book.class);
-        Book createdBook = bookService.saveBook(saveBookDtos);
-        BookDtos bookDtos = modelMapper.map(createdBook, BookDtos.class);
-        return ResponseEntity.status(HttpStatus.CREATED).body(bookDtos);
+    public ResponseEntity<BookDtos> saveBook(@RequestBody SaveBookDtos saveBookDtos) {
+        return new ResponseEntity<>(mapper.toResource(bookService.saveBook(mapper.toModel(saveBookDtos))), HttpStatus.CREATED);
     }
-
-
-
-    @PutMapping("/{id}")
-    public ResponseEntity<BookDtos> updateBook(@PathVariable Long id, @Valid @RequestBody SaveBookDtos saveBookDtos) {
-
-        BookResponse response = bookService.updateBook(id,saveBookDtos);
-        if (response.isSuccess()) {
-            BookDtos bookDtos = modelMapper.map(response.getResource(), BookDtos.class);
-            return ResponseEntity.ok(bookDtos);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    @PutMapping("{bookId}")
+    public BookDtos updateBook(@PathVariable Long bookId, @RequestBody SaveBookDtos saveBookDtos) {
+        return mapper.toResource(bookService.updateBook(bookId, mapper.toModel(saveBookDtos)));
     }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
-        bookService.deleteBook(id);
-        return ResponseEntity.noContent().build();
+    @DeleteMapping("{bookId}")
+    public ResponseEntity<?> deleteBook(@PathVariable Long bookId) {
+        return bookService.deleteBook(bookId);
     }
 }

@@ -9,11 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SagaDtos {
 
-    private int id;
+    private Long id;
     private String Title;
 
     private String Synopsis;
-
-    private SagaStatusDtos sagaStatusDtos;
-
 }
